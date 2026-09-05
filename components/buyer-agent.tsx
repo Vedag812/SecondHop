@@ -79,6 +79,52 @@ export function BuyerAgent() {
     )
     .at(-1);
 
+  async function openDemoOrActiveHandoff() {
+    if (activeCase) {
+      setPopupModal('courier');
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch('/api/rescue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reserve',
+          parcelId: 'parcel-blue',
+          rail: 'simulation',
+          requestId: `handoff_demo_${Date.now()}`,
+          budgetPaise: 115000,
+          radiusKm: 3,
+          courierPaise: 8000,
+          requestedVariant: 'Midnight Blue',
+        }),
+      });
+      const resData = await res.json();
+      const caseId = resData?.result?.caseId;
+      if (caseId) {
+        await fetch('/api/rescue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'order', caseId }),
+        });
+        await fetch('/api/rescue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'simulate_payment', caseId }),
+        });
+      }
+      await refresh();
+      setPopupModal('courier');
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : 'Could not initialize demo handoff.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function search() {
     setBusy(true);
     setError('');
@@ -129,6 +175,41 @@ export function BuyerAgent() {
           Agentic Commerce Rail · Instant Settlement Active · Firm budget &
           distance gates enforce purchase boundaries
         </span>
+      </div>
+
+      {/* Top Banner: Direct Access to Live Full Dual-View Popup */}
+      <div className="mt-6 p-4 rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-500/10 via-orange-500/[0.04] to-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="size-11 rounded-xl bg-orange-500/20 border border-orange-500/30 grid place-items-center text-orange-400 shrink-0">
+            <Truck size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-white">
+                Live Physical Handoff Protocol
+              </span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-400">
+                Full Side-by-Side View
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Inspect the package seal as Courier (left) and confirm the single-use delivery pass as Buyer (right) simultaneously.
+            </p>
+          </div>
+        </div>
+        <Button
+          className="rescue-primary text-xs font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/20 px-4 py-2.5 rounded-xl shrink-0"
+          onClick={() => void openDemoOrActiveHandoff()}
+          disabled={busy}
+        >
+          {busy ? (
+            <Loader2 className="animate-spin" size={13} />
+          ) : (
+            <Sparkles size={13} />
+          )}
+          ⚡ Open Courier & Buyer Full View
+          <ArrowUpRight size={13} />
+        </Button>
       </div>
 
       {/* Active Handoff in Progress Card */}
@@ -489,7 +570,7 @@ export function BuyerAgent() {
             }
           }}
         >
-          <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
+          <div className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
             <RescueHandoff
               caseId={activeCase.id}
               courierToken={activeCase.courierLink?.split('#')[1]}

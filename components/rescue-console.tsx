@@ -526,7 +526,7 @@ export function CasePanel({
             }
           }}
         >
-          <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
+          <div className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
             <RescueHandoff
               caseId={c.id}
               courierToken={c.courierLink?.split('#')[1]}
