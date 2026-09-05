@@ -69,12 +69,13 @@ export function BuyerAgent() {
     return () => window.removeEventListener('keydown', onKey);
   }, [popupModal, refresh]);
 
-  // Find most recent active case in workspace
+  // Find most recent active case in workspace with handoff capability
   const activeCase = data?.workspace.cases
     .filter(
       (c) =>
         c.state !== 'EXPIRED' &&
-        ['PAID', 'COURIER_VERIFIED', 'DELIVERED'].includes(c.state),
+        (Boolean(c.courierLink || c.buyerLink) ||
+          ['PAID', 'COURIER_VERIFIED', 'DELIVERED'].includes(c.state)),
     )
     .at(-1);
 
@@ -190,22 +191,30 @@ export function BuyerAgent() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <Button
+                className="rescue-primary text-xs inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/20"
+                onClick={() => setPopupModal(activeCase.state === 'PAID' ? 'courier' : 'buyer')}
+              >
+                <Sparkles size={13} />
+                ⚡ Open Courier & Buyer Popup
+                <ArrowUpRight size={12} />
+              </Button>
               {activeCase.courierLink && (
                 <Button
-                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl"
+                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl"
                   onClick={() => setPopupModal('courier')}
                 >
                   <Truck size={13} className="text-orange-400" />
-                  Open Courier Popup <ArrowUpRight size={12} />
+                  Courier Tab <ArrowUpRight size={12} />
                 </Button>
               )}
               {activeCase.buyerLink && (
                 <Button
-                  className="rescue-primary text-xs inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold"
+                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-emerald-300"
                   onClick={() => setPopupModal('buyer')}
                 >
                   <ShieldCheck size={13} />
-                  Open Buyer Pass Popup <ArrowUpRight size={12} />
+                  Buyer Pass Tab <ArrowUpRight size={12} />
                 </Button>
               )}
             </div>
@@ -483,16 +492,15 @@ export function BuyerAgent() {
           <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
             <RescueHandoff
               caseId={activeCase.id}
-              initialToken={
-                popupModal === 'courier'
-                  ? activeCase.courierLink?.split('#')[1]
-                  : activeCase.buyerLink?.split('#')[1]
-              }
+              courierToken={activeCase.courierLink?.split('#')[1]}
+              buyerToken={activeCase.buyerLink?.split('#')[1]}
+              initialRole={popupModal || 'courier'}
               isModal
               onClose={() => {
                 setPopupModal(null);
                 void refresh();
               }}
+              onStateChange={() => void refresh()}
             />
           </div>
         </div>

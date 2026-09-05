@@ -384,10 +384,11 @@ export function CasePanel({
               </Button>
               {c.courierLink && (
                 <Button
-                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl"
+                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border-orange-500/30 text-orange-300 hover:bg-orange-500/10"
                   onClick={() => setPopupModal('courier')}
                 >
-                  Open Courier Popup <ArrowUpRight size={13} />
+                  <Truck size={13} className="text-orange-400" />
+                  Open Courier & Buyer Popup <ArrowUpRight size={13} />
                 </Button>
               )}
             </div>
@@ -430,10 +431,11 @@ export function CasePanel({
               </Button>
               {c.buyerLink && (
                 <Button
-                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-emerald-300"
+                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
                   onClick={() => setPopupModal('buyer')}
                 >
-                  Open Buyer Popup <ArrowUpRight size={13} />
+                  <ShieldCheck size={13} />
+                  Open Courier & Buyer Popup <ArrowUpRight size={13} />
                 </Button>
               )}
             </div>
@@ -527,16 +529,15 @@ export function CasePanel({
           <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
             <RescueHandoff
               caseId={c.id}
-              initialToken={
-                popupModal === 'courier'
-                  ? c.courierLink?.split('#')[1]
-                  : c.buyerLink?.split('#')[1]
-              }
+              courierToken={c.courierLink?.split('#')[1]}
+              buyerToken={c.buyerLink?.split('#')[1]}
+              initialRole={popupModal || 'courier'}
               isModal
               onClose={() => {
                 setPopupModal(null);
                 void refresh();
               }}
+              onStateChange={() => void refresh()}
             />
           </div>
         </div>

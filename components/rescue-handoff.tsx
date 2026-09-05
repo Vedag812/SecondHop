@@ -32,13 +32,21 @@ import { CaseHistory } from './rescue-history';
 export function RescueHandoff({
   caseId,
   initialToken,
+  courierToken: propCourierToken,
+  buyerToken: propBuyerToken,
+  initialRole = 'courier',
   isModal = false,
   onClose,
+  onStateChange,
 }: {
   caseId: string;
   initialToken?: string;
+  courierToken?: string;
+  buyerToken?: string;
+  initialRole?: 'courier' | 'buyer';
   isModal?: boolean;
   onClose?: () => void;
+  onStateChange?: () => void;
 }) {
   const [data, setData] = useState<{
     case: SafeCase;
@@ -51,10 +59,24 @@ export function RescueHandoff({
   const [notes, setNotes] = useState('');
   const [copied, setCopied] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [activeRole, setActiveRole] = useState<'courier' | 'buyer'>(initialRole);
+
+  const c = data?.case;
+
+  const effectiveCourierToken =
+    propCourierToken ||
+    (c?.courierLink ? c.courierLink.split('#')[1] : '') ||
+    (initialToken && activeRole === 'courier' ? initialToken : '');
+
+  const effectiveBuyerToken =
+    propBuyerToken ||
+    (c?.buyerLink ? c.buyerLink.split('#')[1] : '') ||
+    (initialToken && activeRole === 'buyer' ? initialToken : '');
 
   const token =
-    initialToken ||
-    (typeof window !== 'undefined' ? window.location.hash.slice(1) : '');
+    activeRole === 'courier'
+      ? effectiveCourierToken || initialToken || (typeof window !== 'undefined' ? window.location.hash.slice(1) : '')
+      : effectiveBuyerToken || initialToken || (typeof window !== 'undefined' ? window.location.hash.slice(1) : '');
 
   const refresh = useCallback(async () => {
     try {
@@ -79,8 +101,7 @@ export function RescueHandoff({
     };
   }, [refresh]);
 
-  const c = data?.case;
-  const courier = data?.role === 'courier';
+  const courier = activeRole === 'courier';
 
   // Auto-fill sensible defaults for instant 1-click simplicity
   useEffect(() => {
@@ -124,8 +145,17 @@ export function RescueHandoff({
         token,
       );
       await refresh();
-      if (onClose) {
-        setTimeout(() => onClose(), 800);
+      onStateChange?.();
+
+      if (isModal) {
+        if (activeRole === 'courier' && accepted && !warehouse) {
+          // Instantly switch to buyer role tab so user can test the pass code!
+          setActiveRole('buyer');
+        }
+      } else {
+        if (onClose) {
+          setTimeout(() => onClose(), 800);
+        }
       }
     } catch (err) {
       setError(
@@ -161,7 +191,7 @@ export function RescueHandoff({
     return (
       <div className="space-y-4">
         {/* Modal Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+        <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
           <div>
             <div className="flex items-center gap-2">
               <span
@@ -173,7 +203,7 @@ export function RescueHandoff({
               >
                 {courier ? <Truck size={13} /> : <ShieldCheck size={13} />}
                 {courier
-                  ? 'Step 2: Courier Package Inspection'
+                  ? 'Step 2: Courier Hub Inspection'
                   : 'Step 3: Buyer Delivery & Acceptance'}
               </span>
               <span className="text-[10px] font-mono text-slate-400 border border-white/10 px-2 py-0.5 rounded-full bg-white/[0.03]">
@@ -204,6 +234,46 @@ export function RescueHandoff({
               <X size={16} />
             </button>
           )}
+        </div>
+
+        {/* Dual Role Switcher Tabs */}
+        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-white/[0.04] border border-white/10">
+          <button
+            type="button"
+            onClick={() => setActiveRole('courier')}
+            className={`py-2 px-3 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 ${
+              courier
+                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm shadow-orange-500/10'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
+            }`}
+          >
+            <Truck size={14} className={courier ? 'text-orange-400' : 'text-slate-400'} />
+            <span>Courier Inspection</span>
+            {c.state === 'PAID' && (
+              <span className="size-2 rounded-full bg-orange-400 animate-pulse" title="Action required" />
+            )}
+            {c.state !== 'PAID' && c.state !== 'ORDER_CREATING' && c.state !== 'RESERVED' && (
+              <CheckCircle2 size={13} className="text-emerald-400" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveRole('buyer')}
+            className={`py-2 px-3 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 ${
+              !courier
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/10'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
+            }`}
+          >
+            <ShieldCheck size={14} className={!courier ? 'text-emerald-400' : 'text-slate-400'} />
+            <span>Buyer Delivery Pass</span>
+            {c.state === 'COURIER_VERIFIED' && (
+              <span className="size-2 rounded-full bg-amber-400 animate-pulse" title="Pass code ready" />
+            )}
+            {c.state === 'DELIVERED' && (
+              <CheckCircle2 size={13} className="text-emerald-400" />
+            )}
+          </button>
         </div>
 
         {error && (
@@ -334,7 +404,43 @@ export function RescueHandoff({
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* Courier Already Verified Banner */}
+        {courier && c.state !== 'PAID' && (
+          <div className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-500/[0.08] space-y-3">
+            <div className="flex items-center gap-2.5 text-emerald-300 font-bold text-xs">
+              <CheckCircle2 size={16} /> Package Seal Verified & Cleared for Delivery
+            </div>
+            <p className="text-xs text-slate-300">
+              The courier has successfully confirmed the outer packaging and serial match.
+            </p>
+            <Button
+              className="w-full h-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs flex items-center justify-center gap-2"
+              onClick={() => setActiveRole('buyer')}
+            >
+              <ShieldCheck size={16} /> Switch to Buyer Delivery Pass Tab →
+            </Button>
+          </div>
+        )}
+
+        {/* Buyer View when Courier check is still pending */}
+        {!courier && c.state === 'PAID' && (
+          <div className="p-4 rounded-xl border border-orange-500/30 bg-orange-500/[0.08] space-y-3">
+            <div className="flex items-center gap-2.5 text-orange-300 font-bold text-xs">
+              <Truck size={16} /> Courier Hub Inspection in Progress
+            </div>
+            <p className="text-xs text-slate-300">
+              Courier must verify the factory seal and serial match at the hub before final buyer handover unlocks.
+            </p>
+            <Button
+              className="w-full h-10 rounded-xl bg-orange-500 hover:bg-orange-400 text-black font-bold text-xs flex items-center justify-center gap-2"
+              onClick={() => setActiveRole('courier')}
+            >
+              <Truck size={16} /> Switch to Courier Inspection Tab →
+            </Button>
+          </div>
+        )}
+
+        {/* Action Buttons for Active Steps */}
         {(isCourierStep || isBuyerStep) && (
           <div className="space-y-2.5 pt-1">
             <Button
@@ -370,20 +476,6 @@ export function RescueHandoff({
           </div>
         )}
 
-        {/* Alerts when not in action state */}
-        {!isCourierStep && !isBuyerStep && !isCompleted && (
-          <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] flex items-center gap-3">
-            <LockKeyhole size={18} className="text-amber-400 shrink-0" />
-            <div className="text-xs text-slate-300">
-              {courier
-                ? 'Courier inspection unlocks after payment confirmation.'
-                : c.state === 'PAID'
-                  ? 'Waiting for courier seal inspection at the hub. Once verified, buyer handoff will unlock.'
-                  : 'Verification gate locked for current case state.'}
-            </div>
-          </div>
-        )}
-
         {/* Completed Celebration View */}
         {isCompleted && (
           <div className="p-4 rounded-xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/20 via-emerald-500/5 to-transparent flex items-center gap-3.5">
@@ -404,7 +496,7 @@ export function RescueHandoff({
                 className="rescue-primary text-xs shrink-0"
                 onClick={onClose}
               >
-                Close
+                Done
               </Button>
             )}
           </div>
