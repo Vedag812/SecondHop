@@ -6,8 +6,10 @@ export default function SettingsPage() {
   const checks = [
     {
       name: 'Persistent return ledger',
-      ready: Boolean(data),
-      text: 'Reservations, handoffs and refund outcomes are saved in Cloudflare D1.',
+      ready: Boolean(data?.durableLedger),
+      text: data?.durableLedger
+        ? 'Reservations, handoffs and refund outcomes are saved in Cloudflare D1.'
+        : 'Demo memory storage is active in this Vercel runtime. Configure a durable D1-compatible database before relying on cross-instance persistence.',
     },
     {
       name: 'Protected Escrow Payment Rail',

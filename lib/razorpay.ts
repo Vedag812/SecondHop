@@ -70,7 +70,9 @@ async function razorpayRequest<T>(
   keyId: string,
   keySecret: string,
 ): Promise<T> {
-  const authorization = `Basic ${btoa(`${keyId}:${keySecret}`)}`;
+  const cleanKey = keyId.trim();
+  const cleanSecret = keySecret.trim();
+  const authorization = `Basic ${btoa(`${cleanKey}:${cleanSecret}`)}`;
   const response = await fetch(`https://api.razorpay.com/v1${path}`, {
     ...init,
     headers: new Headers({

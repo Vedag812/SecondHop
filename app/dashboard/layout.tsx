@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/safe-link';
 import { usePathname } from 'next/navigation';
 import {
   BarChart3,
@@ -170,12 +170,12 @@ export default function DashboardLayout({
           {/* User Profile Card */}
           <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 transition-all hover:border-white/20 hover:bg-white/[0.05]">
             <div className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff6b00] to-[#ea580c] text-xs font-black text-black shadow-md shadow-orange-500/20">
-              V
+              U
               <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-[#0a0a0f] bg-emerald-400" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-1">
-                <p className="truncate text-xs font-bold text-white">Vedant</p>
+                <p className="truncate text-xs font-bold text-white">User</p>
                 <span className="rounded bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-mono font-semibold text-orange-400 border border-orange-500/25">
                   Admin
                 </span>
@@ -212,10 +212,10 @@ export default function DashboardLayout({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 py-1">
             <span className="relative flex size-6 items-center justify-center rounded-md bg-gradient-to-br from-[#ff6b00] to-[#ea580c] text-[10px] font-black text-black">
-              V
+              U
               <span className="absolute -bottom-0.5 -right-0.5 size-1.5 rounded-full bg-emerald-400" />
             </span>
-            <span className="text-xs font-semibold text-slate-200">Vedant</span>
+            <span className="text-xs font-semibold text-slate-200">User</span>
           </div>
           <div className="flex items-center gap-1">
             {navItems.map((item) => {

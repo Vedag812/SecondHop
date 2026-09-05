@@ -18,6 +18,7 @@ import {
   randomToken,
   readWorkspace,
   RescueError,
+  storageMode,
 } from '@/lib/rescue-store';
 
 function cookieWorkspace(request: Request) {
@@ -96,6 +97,8 @@ async function snapshot(workspaceId: string) {
     parcels: ALL_PARCELS,
     testCheckoutAvailable,
     aiAvailable: Boolean(process.env.GEMINI_API_KEY),
+    ledger: storageMode(),
+    durableLedger: storageMode() === 'd1',
   };
 }
 export async function GET(request: Request) {

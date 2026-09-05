@@ -107,7 +107,7 @@ export function CommerceCheckout({
         handler: (res: Record<string, string>) => {
           void (async () => {
             try {
-              await fetch('/api/razorpay/verify', {
+              const verifyResponse = await fetch('/api/razorpay/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -117,6 +117,26 @@ export function CommerceCheckout({
                   razorpay_signature: res.razorpay_signature,
                 }),
               });
+              const verifyResult = (await verifyResponse
+                .json()
+                .catch(() => ({}))) as {
+                verified?: boolean;
+                authoritativeStatus?: string;
+                error?: string;
+              };
+              if (!verifyResponse.ok) {
+                throw new Error(
+                  verifyResult.error ??
+                    'Payment verification failed. The handoff remains locked.',
+                );
+              }
+              if (!verifyResult.verified) {
+                throw new Error(
+                  verifyResult.authoritativeStatus
+                    ? `Payment is ${verifyResult.authoritativeStatus}; handoff remains locked.`
+                    : 'Payment verification is still pending. Check payment status before handing off.',
+                );
+              }
             } catch (err) {
               setError(
                 err instanceof Error ? err.message : 'Verification pending.',

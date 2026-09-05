@@ -27,8 +27,8 @@ import {
 } from './razorpay';
 
 export function testKeys() {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const secret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+  const secret = process.env.RAZORPAY_KEY_SECRET?.trim();
   if (!keyId?.startsWith('rzp_test_') || !secret)
     throw new RescueError(
       'Test checkout keys are not configured. Use the explicitly labelled simulation.',

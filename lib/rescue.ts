@@ -324,6 +324,8 @@ export type Snapshot = {
   parcels: Parcel[];
   testCheckoutAvailable: boolean;
   aiAvailable: boolean;
+  ledger?: 'd1' | 'memory';
+  durableLedger?: boolean;
 };
 export function parcelIsReserved(
   cases: RescueCase[],

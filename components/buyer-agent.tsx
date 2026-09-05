@@ -1,5 +1,7 @@
+'use client';
+
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/safe-link';
 import Image from 'next/image';
 import {
   ArrowRight,

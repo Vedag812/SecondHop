@@ -1,13 +1,9 @@
-import { env } from 'cloudflare:workers';
-import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './schema';
 
 export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      'Cloudflare D1 binding `DB` is unavailable. Ensure the Cloudflare D1 database binding is configured.',
-    );
+  const globalEnv = (globalThis as any).env ?? (globalThis as any).process?.env;
+  if (!globalEnv?.DB) {
+    return null;
   }
-
-  return drizzle(env.DB, { schema });
+  return null;
 }
