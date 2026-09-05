@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vinext dev",
-    "build": "vinext build",
+    "build": "vinext build && node scripts/prepare-vercel.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint -c config/oxlintrc.json",
     "format": "oxfmt -c config/oxfmtrc.json",
