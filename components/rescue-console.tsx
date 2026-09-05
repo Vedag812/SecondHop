@@ -499,15 +499,17 @@ export function CasePanel({
                 className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl"
                 onClick={() => setPopupModal('courier')}
               >
-                Open Courier Popup <ArrowUpRight size={13} />
+                <Truck size={13} className="text-orange-400" />
+                🚚 Open Courier Inspection (Step 1) <ArrowUpRight size={13} />
               </Button>
             )}
             {c.buyerLink && (
               <Button
-                className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl"
+                className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-emerald-300"
                 onClick={() => setPopupModal('buyer')}
               >
-                Open Buyer Popup <ArrowUpRight size={13} />
+                <ShieldCheck size={13} />
+                🏠 Open Buyer Doorstep (Step 2) <ArrowUpRight size={13} />
               </Button>
             )}
           </div>
@@ -526,7 +528,7 @@ export function CasePanel({
             }
           }}
         >
-          <div className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
+          <div className="relative w-full max-w-2xl max-h-[94vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
             <RescueHandoff
               caseId={c.id}
               courierToken={c.courierLink?.split('#')[1]}

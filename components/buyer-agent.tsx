@@ -177,7 +177,7 @@ export function BuyerAgent() {
         </span>
       </div>
 
-      {/* Top Banner: Direct Access to Live Full Dual-View Popup */}
+      {/* Top Banner: Sequential Handoff Protocol */}
       <div className="mt-6 p-4 rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-500/10 via-orange-500/[0.04] to-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="size-11 rounded-xl bg-orange-500/20 border border-orange-500/30 grid place-items-center text-orange-400 shrink-0">
@@ -186,30 +186,41 @@ export function BuyerAgent() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-white">
-                Live Physical Handoff Protocol
+                Physical Handoff Protocol
               </span>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-400">
-                Full Side-by-Side View
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-orange-500/30 bg-orange-500/15 text-orange-300">
+                Step 1: Courier · Step 2: Buyer
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Inspect the package seal as Courier (left) and confirm the single-use delivery pass as Buyer (right) simultaneously.
+              Courier inspects seal first (if broken, instant refund is issued). If intact, opens Buyer doorstep pass code.
             </p>
           </div>
         </div>
-        <Button
-          className="rescue-primary text-xs font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/20 px-4 py-2.5 rounded-xl shrink-0"
-          onClick={() => void openDemoOrActiveHandoff()}
-          disabled={busy}
-        >
-          {busy ? (
-            <Loader2 className="animate-spin" size={13} />
-          ) : (
-            <Sparkles size={13} />
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Button
+            className="rescue-primary text-xs font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/20 px-4 py-2.5 rounded-xl"
+            onClick={() => void openDemoOrActiveHandoff()}
+            disabled={busy}
+          >
+            {busy ? (
+              <Loader2 className="animate-spin" size={13} />
+            ) : (
+              <Truck size={13} />
+            )}
+            🚚 Open Courier Inspection (Step 1)
+            <ArrowUpRight size={13} />
+          </Button>
+          {activeCase?.state === 'COURIER_VERIFIED' && (
+            <Button
+              className="rescue-secondary text-xs font-bold text-emerald-300 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-3.5 py-2.5 rounded-xl"
+              onClick={() => setPopupModal('buyer')}
+            >
+              <ShieldCheck size={13} />
+              🏠 Buyer Doorstep (Step 2)
+            </Button>
           )}
-          ⚡ Open Courier & Buyer Full View
-          <ArrowUpRight size={13} />
-        </Button>
+        </div>
       </div>
 
       {/* Active Handoff in Progress Card */}
@@ -241,14 +252,14 @@ export function BuyerAgent() {
                       activeCase.state === 'DELIVERED'
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                         : activeCase.state === 'COURIER_VERIFIED'
-                          ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                           : 'bg-orange-500/20 text-orange-300 border-orange-500/30'
                     }`}
                   >
                     {activeCase.state === 'PAID'
-                      ? 'Step 2: Courier Inspection Needed'
+                      ? 'Step 1: Courier Inspection Needed'
                       : activeCase.state === 'COURIER_VERIFIED'
-                        ? 'Step 3: Ready for Buyer Pass Code'
+                        ? 'Step 2: Ready for Buyer Pass Code'
                         : 'Handoff Completed'}
                   </span>
                   <span className="text-xs font-mono text-slate-400">
@@ -274,30 +285,20 @@ export function BuyerAgent() {
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
               <Button
                 className="rescue-primary text-xs inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/20"
-                onClick={() => setPopupModal(activeCase.state === 'PAID' ? 'courier' : 'buyer')}
+                onClick={() => setPopupModal('courier')}
               >
-                <Sparkles size={13} />
-                ⚡ Open Courier & Buyer Popup
+                <Truck size={13} />
+                🚚 Open Courier Popup
                 <ArrowUpRight size={12} />
               </Button>
-              {activeCase.courierLink && (
-                <Button
-                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl"
-                  onClick={() => setPopupModal('courier')}
-                >
-                  <Truck size={13} className="text-orange-400" />
-                  Courier Tab <ArrowUpRight size={12} />
-                </Button>
-              )}
-              {activeCase.buyerLink && (
-                <Button
-                  className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-emerald-300"
-                  onClick={() => setPopupModal('buyer')}
-                >
-                  <ShieldCheck size={13} />
-                  Buyer Pass Tab <ArrowUpRight size={12} />
-                </Button>
-              )}
+              <Button
+                className="rescue-secondary text-xs inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-emerald-300 border-emerald-500/30"
+                onClick={() => setPopupModal('buyer')}
+              >
+                <ShieldCheck size={13} />
+                🏠 Open Buyer Doorstep Popup
+                <ArrowUpRight size={12} />
+              </Button>
             </div>
           </div>
         </div>
@@ -570,7 +571,7 @@ export function BuyerAgent() {
             }
           }}
         >
-          <div className="relative w-full max-w-5xl max-h-[94vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
+          <div className="relative w-full max-w-2xl max-h-[94vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0a0a0f] p-6 shadow-2xl shadow-black/80 ring-1 ring-white/10 animate-in zoom-in-95 duration-150">
             <RescueHandoff
               caseId={activeCase.id}
               courierToken={activeCase.courierLink?.split('#')[1]}

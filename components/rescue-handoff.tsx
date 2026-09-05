@@ -59,10 +59,13 @@ export function RescueHandoff({
   const [notes, setNotes] = useState('');
   const [copied, setCopied] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [viewMode, setViewMode] = useState<'dual' | 'courier' | 'buyer'>(
-    isModal ? 'dual' : initialRole,
-  );
   const [activeRole, setActiveRole] = useState<'courier' | 'buyer'>(initialRole);
+
+  useEffect(() => {
+    if (initialRole) {
+      setActiveRole(initialRole);
+    }
+  }, [initialRole]);
 
   const c = data?.case;
 
@@ -193,7 +196,7 @@ export function RescueHandoff({
   const isCourierStep = c?.state === 'PAID';
   const isBuyerStep = c?.state === 'COURIER_VERIFIED';
 
-  // Dedicated, High-Polish Modal View with Full Side-by-Side Dual View
+  // Dedicated, High-Polish Modal View with Sequential Courier & Buyer Steps
   if (isModal) {
     if (!c) {
       return (
@@ -210,67 +213,71 @@ export function RescueHandoff({
       );
     }
 
+    const isCourier = activeRole === 'courier';
+    const isRefundState = ['REFUND_PENDING', 'REFUNDED', 'REFUND_REVIEW'].includes(c.state);
+
     return (
       <div className="space-y-4">
         {/* Modal Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold border bg-gradient-to-r from-orange-500/15 to-emerald-500/15 border-white/20 text-white">
-                <Sparkles size={12} className="text-amber-400" />
-                Physical Handoff Protocol
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold border ${
+                  isCourier
+                    ? 'bg-orange-500/15 border-orange-500/30 text-orange-300'
+                    : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                }`}
+              >
+                {isCourier ? <Truck size={12} /> : <ShieldCheck size={12} />}
+                {isCourier
+                  ? 'Step 1 of 2 · Courier Inspection'
+                  : 'Step 2 of 2 · Buyer Doorstep'}
               </span>
               <span className="text-[10px] font-mono text-slate-400 border border-white/10 px-2 py-0.5 rounded-full bg-white/[0.03]">
                 {stateLabel[c.state]}
               </span>
             </div>
             <h2 className="mt-1.5 text-lg sm:text-xl font-bold text-white">
-              Courier Inspection & Buyer Acceptance
+              {isCourier
+                ? 'Courier Parcel Seal Inspection'
+                : 'Buyer Doorstep Delivery Handover'}
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Live dual-party capability. Verify factory seal at the hub, then confirm the single-use delivery pass upon arrival.
+              {isCourier
+                ? 'Inspect factory tamper seal at the hub before releasing package to the local buyer.'
+                : 'Inspect your parcel upon arrival and confirm your single-use delivery pass code.'}
             </p>
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-center">
-            {/* View Mode Switcher */}
+            {/* Step Switcher Pills */}
             <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/10">
               <button
                 type="button"
-                onClick={() => setViewMode('dual')}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
-                  viewMode === 'dual'
-                    ? 'bg-white/15 text-white border border-white/20 shadow-sm'
+                onClick={() => setActiveRole('courier')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                  isCourier
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 shadow-sm'
                     : 'text-slate-400 hover:text-white'
                 }`}
-                title="View Courier and Buyer side by side"
+                title="Open Courier Inspection (Step 1)"
               >
-                <Sparkles size={12} className="text-amber-400" />
-                <span>Side-by-Side</span>
+                <Truck size={12} className={isCourier ? 'text-orange-400' : 'text-slate-500'} />
+                <span>1. Courier</span>
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode('courier')}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
-                  viewMode === 'courier'
-                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                onClick={() => setActiveRole('buyer')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                  !isCourier
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
                     : 'text-slate-400 hover:text-white'
                 }`}
+                title="Open Buyer Doorstep (Step 2)"
               >
-                <Truck size={12} className="text-orange-400" />
-                <span>Courier</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('buyer')}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
-                  viewMode === 'buyer'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <ShieldCheck size={12} className="text-emerald-400" />
-                <span>Buyer</span>
+                <ShieldCheck size={12} className={!isCourier ? 'text-emerald-400' : 'text-slate-500'} />
+                <span>2. Buyer Doorstep</span>
               </button>
             </div>
 
@@ -292,7 +299,7 @@ export function RescueHandoff({
           </div>
         )}
 
-        {/* Product & Route Summary Strip */}
+        {/* Product & Route Strip */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-3">
             <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/40">
@@ -309,7 +316,7 @@ export function RescueHandoff({
                 {c.parcel.title} · <span className="text-slate-300 font-normal">{c.parcel.variant}</span>
               </h3>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400">
-                <span className="text-slate-300 bg-white/[0.04] px-1.5 py-0.2 rounded border border-white/5">
+                <span className="text-slate-300 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/5">
                   S/N: {c.parcel.serial}
                 </span>
                 <span className="text-emerald-400 font-medium">✓ Factory Sealed</span>
@@ -318,140 +325,248 @@ export function RescueHandoff({
             </div>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-[10px] font-mono text-slate-400 uppercase block">Escrow Amount</span>
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Protected Escrow</span>
             <strong className="text-base font-mono text-orange-400 font-bold">
               {money(c.decision.economics.localPricePaise)}
             </strong>
           </div>
         </div>
 
-        {/* MAIN INTERACTIVE DUAL/SINGLE PANE GRID */}
-        <div
-          className={`grid gap-4 ${
-            viewMode === 'dual' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'
-          }`}
-        >
-          {/* ================= LEFT PANE: COURIER HUB INSPECTION ================= */}
-          {(viewMode === 'dual' || viewMode === 'courier') && (
-            <div
-              className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${
-                c.state === 'PAID'
-                  ? 'border-orange-500/40 bg-orange-500/[0.03] shadow-lg shadow-orange-500/5'
-                  : 'border-white/10 bg-white/[0.02]'
-              }`}
-            >
-              <div>
-                {/* Header */}
+        {/* ================= VIEW 1: COURIER INSPECTION (STEP 1) ================= */}
+        {isCourier && (
+          <div className="space-y-4">
+            {/* Condition A: Seal Broken / Refund Processed */}
+            {isRefundState ? (
+              <div className="p-5 rounded-2xl border border-red-500/40 bg-gradient-to-b from-red-500/10 via-red-500/[0.03] to-transparent space-y-4 animate-in fade-in">
+                <div className="flex items-start gap-3.5">
+                  <div className="size-11 rounded-xl bg-red-500/20 border border-red-500/40 grid place-items-center text-red-400 shrink-0">
+                    <ShieldAlert size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">
+                      Inspection Failed: Seal Broken / Package Damaged
+                    </h3>
+                    <p className="text-xs text-red-300 mt-0.5">
+                      Parcel was rejected during courier physical inspection. Return to merchant warehouse activated.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Instant Escrow Refund to Buyer:</span>
+                    <strong className="text-emerald-400 font-mono text-sm">
+                      {money(c.decision.economics.localPricePaise)} (100% Refunded)
+                    </strong>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Razorpay Refund Reference:</span>
+                    <span className="font-mono text-slate-300">{c.refundId || 'sim_refund_instant'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Courier Defect Evidence:</span>
+                    <span className="text-red-300 font-semibold">{c.failureReason || 'Seal broken or damaged packaging reported'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Reverse Logistics Routing:</span>
+                    <span className="text-amber-300 font-mono">Central Warehouse Return Route</span>
+                  </div>
+                </div>
+
+                {onClose && (
+                  <Button
+                    className="w-full rescue-primary text-xs font-bold h-10 rounded-xl"
+                    onClick={onClose}
+                  >
+                    Done & Close
+                  </Button>
+                )}
+              </div>
+            ) : c.state === 'COURIER_VERIFIED' ? (
+              /* Condition B: Seal Verified Intact -> Next Step Button to Buyer Doorstep */
+              <div className="p-5 rounded-2xl border border-emerald-500/40 bg-gradient-to-b from-emerald-500/10 via-emerald-500/[0.03] to-transparent space-y-4 animate-in fade-in">
+                <div className="flex items-start gap-3.5">
+                  <div className="size-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 grid place-items-center text-emerald-400 shrink-0">
+                    <CheckCircle2 size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">
+                      Seal Verified by Courier!
+                    </h3>
+                    <p className="text-xs text-emerald-300 mt-0.5">
+                      Factory tamper seal and serial number confirmed intact. Package is cleared for local delivery.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-black/30 border border-white/5 space-y-2 text-xs text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                    <span>Original factory shrink-wrap seal confirmed unopened</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                    <span>Barcode matches manifest S/N: <strong className="text-white font-mono">{c.parcel.serial}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                    <span>In-transit to: <strong className="text-white">{c.parcel.buyerArea}</strong></span>
+                  </div>
+                </div>
+
+                {/* Primary Button to Open Buyer Doorstep Handover Popup */}
+                <Button
+                  className="w-full h-12 rounded-xl text-xs font-bold text-black shadow-lg bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-emerald-500/25 flex items-center justify-center gap-2"
+                  onClick={() => setActiveRole('buyer')}
+                >
+                  <ShieldCheck size={16} />
+                  ⚡ Proceed to Step 2: Open Buyer Doorstep Handover Popup →
+                </Button>
+              </div>
+            ) : (
+              /* Condition C: Action Required - Courier Inspection */
+              <div className="p-5 rounded-2xl border border-orange-500/40 bg-orange-500/[0.03] space-y-4">
                 <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <span className="size-7 rounded-lg bg-orange-500/20 border border-orange-500/30 grid place-items-center text-orange-400">
                       <Truck size={14} />
                     </span>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">
-                        Step 2: Courier Hub Inspection
-                      </h4>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        Physical condition verification
-                      </span>
-                    </div>
+                    <h4 className="text-sm font-bold text-white">
+                      Physical Inspection & Verification Checkpoints
+                    </h4>
                   </div>
-                  <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
-                      c.state === 'PAID'
-                        ? 'bg-orange-500/20 text-orange-300 border-orange-500/40 animate-pulse font-bold'
-                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-semibold'
-                    }`}
-                  >
-                    {c.state === 'PAID' ? 'Action Required' : 'Seal Cleared ✓'}
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border bg-orange-500/20 text-orange-300 border-orange-500/40 font-bold animate-pulse">
+                    Action Required
                   </span>
                 </div>
 
-                {/* S/N Match & Verification Checklist */}
-                <div className="my-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-                      <span className="text-[10px] text-slate-400 block">
-                        Manifest Serial
-                      </span>
-                      <strong className="text-white text-xs block mt-0.5 truncate">
-                        {c.parcel.serial}
-                      </strong>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
-                      <span className="text-[10px] text-slate-400 block">
-                        Hub Barcode Scanned
-                      </span>
-                      <strong className="text-emerald-400 text-xs block mt-0.5 truncate">
-                        {c.parcel.serial}
-                      </strong>
-                    </div>
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
+                    <span className="text-[10px] text-slate-400 block">Manifest Serial</span>
+                    <strong className="text-white text-xs block mt-0.5 truncate">{c.parcel.serial}</strong>
                   </div>
-
-                  <div className="space-y-2 p-3 rounded-xl bg-black/30 border border-white/5 text-xs text-slate-300">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-                      <span>Original factory shrink-wrap intact & unopened</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-                      <span>Tamper-evident security barcode matched</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-                      <span>Geofence destination: {c.parcel.buyerArea} ({c.parcel.distanceKm} km)</span>
-                    </div>
+                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/5">
+                    <span className="text-[10px] text-slate-400 block">Scanned Hub Barcode</span>
+                    <strong className="text-emerald-400 text-xs block mt-0.5 truncate">{c.parcel.serial}</strong>
                   </div>
                 </div>
-              </div>
 
-              {/* Courier Actions */}
-              <div className="pt-2 space-y-2">
-                {c.state === 'PAID' ? (
-                  <>
-                    <Button
-                      className="w-full h-11 rounded-xl text-xs font-bold text-black shadow-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 shadow-orange-500/20 flex items-center justify-center gap-2"
-                      disabled={busy}
-                      onClick={() => void submitCourier(true)}
-                    >
-                      {busy ? (
-                        <Loader2 className="animate-spin" size={15} />
-                      ) : (
-                        <CheckCircle2 size={16} />
-                      )}
-                      ⚡ 1-Click: Confirm Package Seal & Clear Dispatch
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full h-8 rounded-xl border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 font-semibold text-[11px] flex items-center justify-center gap-1.5"
-                      disabled={busy}
-                      onClick={() => void submitCourier(false)}
-                    >
-                      <ShieldAlert size={13} />
-                      Report Damaged Seal / Serial Mismatch
-                    </Button>
-                  </>
-                ) : (
-                  <div className="p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/[0.08] text-xs text-emerald-300 font-semibold flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-                    <span>Package seal verified. Cleared for local courier delivery!</span>
+                <div className="space-y-2 p-3 rounded-xl bg-black/30 border border-white/5 text-xs text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                    <span>Original factory shrink-wrap intact & unopened</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                    <span>Tamper-evident security barcode verified</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                    <span>Geofence destination: {c.parcel.buyerArea} ({c.parcel.distanceKm} km)</span>
+                  </div>
+                </div>
+
+                {/* The Two Courier Selection Options */}
+                <div className="pt-2 space-y-2.5">
+                  <Button
+                    className="w-full h-11 rounded-xl text-xs font-bold text-black shadow-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 shadow-orange-500/20 flex items-center justify-center gap-2"
+                    disabled={busy}
+                    onClick={() => void submitCourier(true)}
+                  >
+                    {busy ? (
+                      <Loader2 className="animate-spin" size={15} />
+                    ) : (
+                      <CheckCircle2 size={16} />
+                    )}
+                    ⚡ Confirm Seal Intact & Clear for Delivery
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full h-9 rounded-xl border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-red-300 font-semibold text-xs flex items-center justify-center gap-1.5"
+                    disabled={busy}
+                    onClick={() => void submitCourier(false)}
+                  >
+                    <ShieldAlert size={14} />
+                    Report Seal Broken / Damaged (Trigger Instant Refund)
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ================= VIEW 2: BUYER DOORSTEP HANDOVER (STEP 2) ================= */}
+        {!isCourier && (
+          <div className="space-y-4">
+            {/* Condition A: Delivery Complete Celebration */}
+            {isCompleted ? (
+              <div className="p-5 rounded-2xl border border-emerald-500/40 bg-gradient-to-b from-emerald-500/15 via-emerald-500/[0.04] to-transparent space-y-4 animate-in fade-in">
+                <div className="flex items-start gap-3.5">
+                  <div className="size-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 grid place-items-center text-emerald-400 shrink-0">
+                    <CheckCircle2 size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">
+                      Delivery Completed & Escrow Settled!
+                    </h3>
+                    <p className="text-xs text-emerald-300 mt-0.5">
+                      Return successfully rescued in {c.parcel.buyerArea}. Escrow funds released to merchant.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span>Net Merchant Margin Advantage:</span>
+                    <strong className="text-emerald-400 font-mono text-sm">
+                      +{money(c.decision.recovery.advantagePaise)}
+                    </strong>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>Buyer Discount Saved vs Retail:</span>
+                    <span className="text-white font-mono">
+                      {money(c.parcel.retailPaise - c.decision.economics.localPricePaise)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span>Carbon & Freight Offset:</span>
+                    <span className="text-emerald-300 font-mono">1,200 km diesel freight avoided</span>
+                  </div>
+                </div>
+
+                {onClose && (
+                  <Button
+                    className="w-full rescue-primary text-xs font-bold h-10 rounded-xl"
+                    onClick={onClose}
+                  >
+                    Done & Close
+                  </Button>
                 )}
               </div>
-            </div>
-          )}
-
-          {/* ================= RIGHT PANE: BUYER DOORSTEP ACCEPTANCE ================= */}
-          {(viewMode === 'dual' || viewMode === 'buyer') && (
-            <div
-              className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${
-                c.state === 'COURIER_VERIFIED'
-                  ? 'border-emerald-500/40 bg-emerald-500/[0.04] shadow-lg shadow-emerald-500/5'
-                  : 'border-white/10 bg-white/[0.02]'
-              }`}
-            >
-              <div>
-                {/* Header */}
+            ) : isRefundState ? (
+              /* Condition B: Order Refunded */
+              <div className="p-5 rounded-2xl border border-red-500/40 bg-red-500/[0.05] space-y-3">
+                <div className="flex items-center gap-2.5 text-red-300 text-sm font-bold">
+                  <ShieldAlert size={18} />
+                  <span>Order Refunded (Seal Broken or Rejected)</span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  This parcel failed physical verification. Full escrow payment of{' '}
+                  <strong className="text-emerald-400 font-mono">
+                    {money(c.decision.economics.localPricePaise)}
+                  </strong>{' '}
+                  has been refunded to your original payment method.
+                </p>
+                {onClose && (
+                  <Button className="rescue-secondary text-xs h-9" onClick={onClose}>
+                    Close
+                  </Button>
+                )}
+              </div>
+            ) : c.state === 'COURIER_VERIFIED' ? (
+              /* Condition C: Ready for Buyer Doorstep Confirmation */
+              <div className="p-5 rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.03] space-y-4">
                 <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <span className="size-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 grid place-items-center text-emerald-400">
@@ -459,150 +574,112 @@ export function RescueHandoff({
                     </span>
                     <div>
                       <h4 className="text-sm font-bold text-white">
-                        Step 3: Buyer Doorstep Pass
+                        Doorstep Delivery Verification
                       </h4>
                       <span className="text-[10px] font-mono text-slate-400">
-                        Protected escrow delivery release
+                        Recipient: {c.parcel.buyer} · {c.parcel.buyerArea}
                       </span>
                     </div>
                   </div>
-                  <span
-                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
-                      c.state === 'COURIER_VERIFIED'
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse font-bold'
-                        : c.state === 'DELIVERED'
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-semibold'
-                          : 'bg-white/10 text-slate-400 border-white/10'
-                    }`}
-                  >
-                    {c.state === 'COURIER_VERIFIED'
-                      ? 'Pass Code Ready'
-                      : c.state === 'DELIVERED'
-                        ? 'Delivered ✓'
-                        : 'Awaiting Courier'}
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-semibold">
+                    Ready for Handover
                   </span>
                 </div>
 
-                {/* Buyer Delivery Pass Tiles */}
-                <div className="my-4 space-y-3">
-                  <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-black/50 text-center">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-semibold flex items-center justify-center gap-1">
-                      <LockKeyhole size={11} /> Single-Use Delivery Pass Code
-                    </span>
+                {/* Delivery Pass Code OTP Block */}
+                <div className="p-4 rounded-2xl bg-black/40 border border-emerald-500/30 text-center space-y-2.5">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                    Single-Use Doorstep Delivery Pass Code
+                  </span>
 
-                    {/* 6 Digits */}
-                    <div className="my-2.5 flex items-center justify-center gap-1.5 sm:gap-2">
-                      {(c.otp || '872467').split('').map((digit, idx) => (
-                        <span
-                          key={idx}
-                          className="size-9 sm:size-10 rounded-xl border border-emerald-500/40 bg-black font-mono text-lg sm:text-xl font-black text-emerald-300 shadow-inner flex items-center justify-center ring-1 ring-emerald-500/20"
-                        >
-                          {digit}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const code = c.otp || '872467';
-                          void navigator.clipboard.writeText(code);
-                          setCopied(true);
-                          setTimeout(() => setCopied(false), 2000);
-                        }}
-                        className="h-7 px-3 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-[11px] font-mono rounded-lg"
+                  <div className="flex items-center justify-center gap-2 py-1">
+                    {(c.otp || '872467').split('').map((digit, idx) => (
+                      <span
+                        key={idx}
+                        className="size-11 rounded-xl bg-emerald-500/15 border-2 border-emerald-500/50 text-emerald-300 font-mono text-xl font-black grid place-items-center shadow-lg shadow-emerald-500/10"
                       >
-                        {copied ? (
-                          <Check size={12} className="mr-1 text-emerald-300" />
-                        ) : (
-                          <Copy size={12} className="mr-1" />
-                        )}
-                        {copied ? 'Pass Copied!' : 'Copy Code'}
-                      </Button>
-                    </div>
+                        {digit}
+                      </span>
+                    ))}
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 text-xs text-slate-300 space-y-1">
-                    <p className="text-[11px] text-slate-400">
-                      📍 Recipient: <strong className="text-white">{c.parcel.buyer}</strong> · {c.parcel.buyerArea}
-                    </p>
-                    <p className="text-[11px] text-emerald-400">
-                      🛡️ Protected Escrow: Payment is held safe until you inspect the seal.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Buyer Actions */}
-              <div className="pt-2 space-y-2">
-                {c.state === 'COURIER_VERIFIED' ? (
-                  <>
-                    <Button
-                      className="w-full h-11 rounded-xl text-xs font-bold text-black shadow-lg bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-emerald-500/20 flex items-center justify-center gap-2"
-                      disabled={busy}
-                      onClick={() => void submitBuyer(true)}
-                    >
-                      {busy ? (
-                        <Loader2 className="animate-spin" size={15} />
-                      ) : (
-                        <ShieldCheck size={16} />
-                      )}
-                      ⚡ 1-Click: Confirm Pass Code & Accept Delivery
-                    </Button>
+                  <div className="flex items-center justify-center gap-2">
                     <Button
                       variant="outline"
-                      className="w-full h-8 rounded-xl border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 font-semibold text-[11px] flex items-center justify-center gap-1.5"
-                      disabled={busy}
-                      onClick={() => void submitBuyer(false)}
+                      size="sm"
+                      onClick={() => {
+                        const code = c.otp || '872467';
+                        void navigator.clipboard.writeText(code);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="h-7 px-3 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-[11px] font-mono rounded-lg"
                     >
-                      <ShieldAlert size={13} />
-                      Decline Package (Damage or Reject)
+                      {copied ? (
+                        <Check size={12} className="mr-1 text-emerald-300" />
+                      ) : (
+                        <Copy size={12} className="mr-1" />
+                      )}
+                      {copied ? 'Pass Copied!' : 'Copy Code'}
                     </Button>
-                  </>
-                ) : c.state === 'DELIVERED' ? (
-                  <div className="p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/[0.12] text-xs text-emerald-300 font-semibold flex items-center gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-                    <span>Package delivered & escrow funds settled successfully!</span>
                   </div>
-                ) : (
-                  <div className="p-3 rounded-xl border border-white/10 bg-white/[0.02] text-xs text-slate-400 flex items-center gap-2">
-                    <LockKeyhole size={14} className="text-amber-400 shrink-0" />
-                    <span>Courier seal inspection on the left must be confirmed before release.</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Celebration / Delivery Success Summary */}
-        {isCompleted && (
-          <div className="p-4 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/20 via-emerald-500/5 to-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in">
-            <div className="flex items-center gap-3.5">
-              <div className="size-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 grid place-items-center shrink-0">
-                <CheckCircle2 size={22} className="text-emerald-400" />
+                  <p className="text-[11px] text-slate-400">
+                    Show or provide this 6-digit code to the delivery courier upon inspecting the box.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-black/30 border border-white/5 text-xs text-slate-300 space-y-1">
+                  <p className="text-[11px] text-emerald-400 font-semibold">
+                    🛡️ Protected Escrow: Payment is held safe until you inspect the box and confirm delivery.
+                  </p>
+                </div>
+
+                {/* Buyer Actions */}
+                <div className="pt-2 space-y-2">
+                  <Button
+                    className="w-full h-11 rounded-xl text-xs font-bold text-black shadow-lg bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-emerald-500/20 flex items-center justify-center gap-2"
+                    disabled={busy}
+                    onClick={() => void submitBuyer(true)}
+                  >
+                    {busy ? (
+                      <Loader2 className="animate-spin" size={15} />
+                    ) : (
+                      <ShieldCheck size={16} />
+                    )}
+                    ⚡ 1-Click: Confirm Pass Code & Accept Delivery
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full h-8 rounded-xl border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 font-semibold text-[11px] flex items-center justify-center gap-1.5"
+                    disabled={busy}
+                    onClick={() => void submitBuyer(false)}
+                  >
+                    <ShieldAlert size={13} />
+                    Decline Package at Doorstep (Damaged or Reject)
+                  </Button>
+                </div>
               </div>
-              <div>
-                <h4 className="text-sm font-bold text-white">
-                  Return Rescued & Hyperlocal Delivery Confirmed!
-                </h4>
-                <p className="text-xs text-emerald-300 mt-0.5 font-semibold">
-                  +{money(c.decision.recovery.advantagePaise)} Net Merchant Margin Recovered vs Warehouse Return
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  1,200 km diesel freight avoided · Zero interstate warehouse bleed.
-                </p>
+            ) : (
+              /* Condition D: Courier Step Not Complete Yet */
+              <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02] text-center space-y-3">
+                <div className="size-11 rounded-xl bg-amber-500/20 border border-amber-500/30 grid place-items-center text-amber-400 mx-auto">
+                  <LockKeyhole size={20} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">Courier Inspection Required First</h4>
+                  <p className="text-xs text-slate-400 mt-1">
+                    The package seal must be inspected and cleared by the courier before doorstep handover can proceed.
+                  </p>
+                </div>
+                <Button
+                  className="rescue-primary text-xs font-bold"
+                  onClick={() => setActiveRole('courier')}
+                >
+                  ← Go to Courier Seal Inspection (Step 1)
+                </Button>
               </div>
-            </div>
-            {onClose && (
-              <Button
-                className="rescue-primary text-xs font-bold px-5 py-2 rounded-xl shrink-0"
-                onClick={onClose}
-              >
-                Close & Return
-              </Button>
             )}
           </div>
         )}
