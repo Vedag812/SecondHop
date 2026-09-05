@@ -7,7 +7,6 @@ import {
   ChevronRight,
   LayoutDashboard,
   List,
-  Settings,
   ShoppingBag,
   Bot,
 } from 'lucide-react';
@@ -31,11 +30,7 @@ const commerceNav = [
   { href: '/dashboard/agentic', label: 'AI Buyer Agent', icon: Bot },
 ];
 
-const systemNav = [
-  { href: '/dashboard/settings', label: 'System Readiness', icon: Settings },
-];
-
-const navItems = [...operationsNav, ...commerceNav, ...systemNav];
+const navItems = [...operationsNav, ...commerceNav];
 
 export default function DashboardLayout({
   children,
@@ -132,38 +127,8 @@ export default function DashboardLayout({
               })}
             </div>
           </div>
-
-          {/* System Group */}
-          <div>
-            <p className="px-3 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
-              SYSTEM
-            </p>
-            <div className="mt-2 space-y-1">
-              {systemNav.map((item) => {
-                const active = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold tracking-wide transition-all ${
-                      active
-                        ? 'bg-gradient-to-r from-orange-500/20 to-orange-500/5 text-orange-400 border border-orange-500/30 shadow-md shadow-orange-500/10'
-                        : 'text-slate-400 hover:bg-white/[0.04] hover:text-white'
-                    }`}
-                  >
-                    <item.icon
-                      className={`size-[17px] ${active ? 'text-orange-400' : 'text-slate-500 group-hover:text-slate-300'}`}
-                    />
-                    {item.label}
-                    {active && (
-                      <ChevronRight className="ml-auto size-3.5 text-orange-400" />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
         </nav>
+
 
         {/* Bottom User & Node Status Section */}
         <div className="border-t border-white/[0.08] p-3 space-y-2.5">
