@@ -610,52 +610,6 @@ export function RescueHandoff({
     );
   }
 
-        {/* Optional Manual Inspection Inputs */}
-        {(isCourierStep || isBuyerStep) && (
-          <details className="text-xs text-slate-400 pt-1">
-            <summary className="cursor-pointer hover:text-white inline-flex items-center gap-1 font-mono text-[11px]">
-              <span>Edit Inspection Details (Optional)</span>
-              <ChevronDown size={11} />
-            </summary>
-            <div className="mt-2 space-y-2 p-3 rounded-xl bg-white/[0.02] border border-white/10">
-              {courier ? (
-                <label className="rescue-field">
-                  Serial Number Confirmed on Package
-                  <Input
-                    className="rescue-input font-mono text-xs"
-                    value={serial}
-                    onChange={(e) => setSerial(e.target.value)}
-                    placeholder="e.g. WH40-IN-884921"
-                  />
-                </label>
-              ) : (
-                <label className="rescue-field">
-                  Delivery Pass Code
-                  <Input
-                    className="rescue-input font-mono text-xs tracking-widest"
-                    value={otp}
-                    onChange={(e) =>
-                      setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
-                    }
-                    maxLength={6}
-                  />
-                </label>
-              )}
-              <label className="rescue-field">
-                Inspection Notes
-                <Textarea
-                  className="rescue-input text-xs"
-                  rows={2}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </label>
-            </div>
-          </details>
-        )}
-      </div>
-    );
-  }
 
   return (
     <main
